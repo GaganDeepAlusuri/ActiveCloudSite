@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using CryptoPulse.Models;
 
 namespace CryptoPulse.DataAccess
@@ -14,5 +10,23 @@ namespace CryptoPulse.DataAccess
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Equity> Equities { get; set; }
+        public DbSet<Coin> Coins { get; set; }
+        public DbSet<Market> Markets { get; set; }
+        public DbSet<Exchange> Exchanges { get; set; }
+
+        /*protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Define a One-to-Many relationship between Coin and Market
+            modelBuilder.Entity<Coin>()
+                .HasMany(c => c.Markets)
+                .WithOne(m => m.Coin)
+                .HasForeignKey(m => m.CoinID);
+
+            // Define a One-to-Many relationship between Exchange and Market
+            modelBuilder.Entity<Exchange>()
+                .HasMany(e => e.Markets)
+                .WithOne(m => m.Exchange)
+                .HasForeignKey(m => m.ExchangeID);
+        }*/
     }
 }

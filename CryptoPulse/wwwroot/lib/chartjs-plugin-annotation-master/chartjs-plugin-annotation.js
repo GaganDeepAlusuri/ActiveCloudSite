@@ -26,7 +26,7 @@ module.exports = function(Chart) {
 	}
 
 	function draw(drawTime) {
-		return function(chartInstance, easingDecimal) {
+		return function(chartInstance, easingdecimal?) {
 			var defaultDrawTime = chartInstance.annotation.options.drawTime;
 
 			helpers.elements(chartInstance)
@@ -34,7 +34,7 @@ module.exports = function(Chart) {
 					return drawTime === (element.options.drawTime || defaultDrawTime);
 				})
 				.forEach(function(element) {
-					element.transition(easingDecimal).draw();
+					element.transition(easingdecimal?).draw();
 				});
 		};
 	}

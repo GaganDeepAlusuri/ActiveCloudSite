@@ -1,0 +1,52 @@
+﻿@model IEnumerable<CryptoPulse.Models.Coin>
+
+
+    <div class="container">
+        <h2>Coins</h2>
+        <hr />
+
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Price USD</th>
+                    <th>Percent Change 24h</th>
+                    <th>Percent Change 1h</th>
+                    <th>Percent Change 7d</th>
+                    <th>Market Cap USD</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.ID)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Symbol)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.PriceUSD)</td>
+                        <td>@Html.DisplayFor(modelItem => item.PercentChange24h)</td>
+                        <td>@Html.DisplayFor(modelItem => item.PercentChange1h)</td>
+                        <td>@Html.DisplayFor(modelItem => item.PercentChange7d)</td>
+                        <td>@Html.DisplayFor(modelItem => item.MarketCapUSD)</td>
+                    </tr>
+                }
+                <tr>
+                    <td>
+                        <a id="dbopt" asp-controller="Home" asp-action="PopulateCoins">
+                            <img src="~/images/button_save-data.png" />
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Include Bootstrap JavaScript from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Your custom script -->
+    <script>
+        alertDbSave(@ViewBag.dbSuccessComp);
+    </script>

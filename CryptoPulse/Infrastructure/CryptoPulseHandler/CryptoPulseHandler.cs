@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using CryptoPulse.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CryptoPulse.Infrastructure.CryptoPulseHandler
 {
     public class CryptoPulseHandler
     {
-        static string BASE_URL = "https://api.CryptoPulse.com/1.0/"; //This is the base URL, method specific URL is appended to this.
+        static string BASE_URL = "https://api.coinlore.net/api/"; //This is the base URL, method specific URL is appended to this.
         HttpClient httpClient;
 
         public CryptoPulseHandler()
@@ -23,27 +24,44 @@ namespace CryptoPulse.Infrastructure.CryptoPulseHandler
         /****
          * Calls the Coin Lore reference API to get the list of coins. 
         ****/
-        public List<Company> GetSymbols()
+        public List<Coin> GetCoins()
         {
-            string CryptoPulse_API_PATH = BASE_URL + "ref-data/symbols";
-            string companyList = "";
-
-            List<Company> companies = null;
-
-            httpClient.BaseAddress = new Uri(CryptoPulse_API_PATH);
-            HttpResponseMessage response = httpClient.GetAsync(CryptoPulse_API_PATH).GetAwaiter().GetResult();
-            if (response.IsSuccessStatusCode)
+            try
             {
-                companyList = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            }
+                string CryptoPulse_API_PATH = BASE_URL + "tickers/";
 
-            if (!companyList.Equals(""))
-            {
-                companies = JsonConvert.DeserializeObject<List<Company>>(companyList);
-                companies = companies.GetRange(0, 50);
+                httpClient.BaseAddress = new Uri(CryptoPulse_API_PATH);
+                HttpResponseMessage response = httpClient.GetAsync(CryptoPulse_API_PATH).GetAwaiter().GetResult();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var coinInfo = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (!string.IsNullOrWhiteSpace(coinInfo))
+                    {
+                        JObject jsonObject = JObject.Parse(coinInfo);
+                        JArray data = (JArray)jsonObject["data"];
+
+                        if (data != null)
+                        {
+                            List<Coin> coins = data.ToObject<List<Coin>>();
+                            return coins;
+                        }
+                    }
+                }
+
+                // Handle the case where the response is not successful or the coin data is empty.
+                return new List<Coin>();
             }
-            return companies;
+            catch (Exception ex)
+            {
+                // Handle exceptions here, log them, and possibly return a default value or throw.
+                // For example:
+                // Log.Error("Error in GetCoins method: " + ex.Message);
+                // throw;
+                return new List<Coin>();
+            }
         }
+
 
         /****
          * Calls the  Coin Lore API to get 1 year's chart for the supplied symbol. 

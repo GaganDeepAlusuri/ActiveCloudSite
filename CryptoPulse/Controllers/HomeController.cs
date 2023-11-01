@@ -11,6 +11,7 @@ using CryptoPulse.DataAccess;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace MVCTemplate.Controllers
 {
@@ -19,7 +20,7 @@ namespace MVCTemplate.Controllers
     {
         public ApplicationDbContext dbContext;
         private readonly AppSettings _appSettings;
-        public const string SessionKeyName = "StockData";
+        public const string SessionKeyName = "CoinsData";
         //List<Company> companies = new List<Company>();
         public HomeController(ApplicationDbContext context, IOptions<AppSettings> appSettings)
         {
@@ -38,33 +39,18 @@ namespace MVCTemplate.Controllers
         }
 
         /****
-         * The Symbols action calls the GetSymbols method that returns a list of Companies.
-         * This list of Companies is passed to the Symbols View.
+         * The Coins action calls the GetCoins method that returns a list of Coins.
+         * This list of Coins is passed to the Coins View.
         ****/
-        public IActionResult Symbols()
+        public IActionResult Coins()
         {
             //Set ViewBag variable first
             ViewBag.dbSucessComp = 0;
             CryptoPulseHandler webHandler = new CryptoPulseHandler();
-            List<Company> companies = webHandler.GetSymbols();
-
-            String companiesData = JsonConvert.SerializeObject(companies);
-            //int size =  System.Text.ASCIIEncoding.ASCII.GetByteCount(companiesData);
-
-            HttpContext.Session.SetString(SessionKeyName, companiesData);
-            //Save comapnies in TempData
-            //if ( size < 4000)
-            //{
-            //    TempData["Companies"] = companiesData;
-            //}
-            //else
-            //{
-            //    TempData["Companies"] = "Fetch";
-            //}
-            
-            
-
-            return View(companies);
+            List<Coin> coins = webHandler.GetCoins();
+            string coinsData = JsonConvert.SerializeObject(coins);
+            HttpContext.Session.SetString(SessionKeyName, coinsData);
+            return View(coins);
         }
 
         /****
@@ -99,34 +85,59 @@ namespace MVCTemplate.Controllers
             Dictionary<string, int> tableCount = new Dictionary<string, int>();
             tableCount.Add("Companies", dbContext.Companies.Count());
             tableCount.Add("Charts", dbContext.Equities.Count());
+            tableCount.Add("Coins", dbContext.Coins.Count());
             return View(tableCount);
         }
 
         /****
-         * Saves the Symbols in database.
+         * Saves the Coins in database.
         ****/
-        public IActionResult PopulateSymbols()
+        public IActionResult PopulateCoins()
         {
-            string companiesData = HttpContext.Session.GetString(SessionKeyName);
-            List<Company> companies = null;
-            if (companiesData != "")
+            string coinsData = HttpContext.Session.GetString(SessionKeyName);
+            List<Coin> coins = null;
+            if (coinsData != "")
             {
-                 companies = JsonConvert.DeserializeObject<List<Company>>(companiesData);
+                coins = JsonConvert.DeserializeObject<List<Coin>>(coinsData);
             }
-            
-            foreach (Company company in companies)
+
+            using (var transaction = dbContext.Database.BeginTransaction())
             {
-                //Database will give PK constraint violation error when trying to insert record with existing PK.
-                //So add company only if it doesnt exist, check existence using symbol (PK)
-                if (dbContext.Companies.Where(c => c.symbol.Equals(company.symbol)).Count() == 0)
+                try
                 {
-                    dbContext.Companies.Add(company);
+                    // Enable IDENTITY_INSERT for the "Coins" table
+                    dbContext.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Coins ON");
+
+                    foreach (Coin coin in coins)
+                    {
+                        // Database will give PK constraint violation error when trying to insert a record with an existing PK.
+                        // So add the coin only if it doesn't exist, check existence using the "Symbol" (PK).
+                        if (dbContext.Coins.Where(c => c.Symbol.Equals(coin.Symbol)).Count() == 0)
+                        {
+                            dbContext.Coins.Add(coin);
+                        }
+                    }
+
+                    dbContext.SaveChanges();
+                    transaction.Commit();
+                    ViewBag.dbSuccessComp = 1;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ViewBag.dbSuccessComp = 0;
+                    // Handle the exception as needed (e.g., log the error).
+                }
+                finally
+                {
+                    // Disable IDENTITY_INSERT
+                    dbContext.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Coins OFF");
                 }
             }
-            dbContext.SaveChanges();
-            ViewBag.dbSuccessComp = 1;
-            return View("Symbols", companies);
+
+            return View("Coins", coins);
         }
+
 
         /****
          * Saves the equities in database.
@@ -162,6 +173,7 @@ namespace MVCTemplate.Controllers
                 //First remove equities and then the companies
                 dbContext.Equities.RemoveRange(dbContext.Equities);
                 dbContext.Companies.RemoveRange(dbContext.Companies);
+                dbContext.Coins.RemoveRange(dbContext.Coins);
             }
             else if ("Companies".Equals(tableToDel))
             {
@@ -173,6 +185,10 @@ namespace MVCTemplate.Controllers
             else if ("Charts".Equals(tableToDel))
             {
                 dbContext.Equities.RemoveRange(dbContext.Equities);
+            }
+            else if ("Coins".Equals(tableToDel))
+            {
+                dbContext.Coins.RemoveRange(dbContext.Coins);
             }
             dbContext.SaveChanges();
         }
