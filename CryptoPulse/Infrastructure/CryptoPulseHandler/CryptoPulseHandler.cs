@@ -30,7 +30,10 @@ namespace CryptoPulse.Infrastructure.CryptoPulseHandler
             {
                 string CryptoPulse_API_PATH = BASE_URL + "tickers/";
 
+                // Create a new HttpClient instance or configure it during initialization
+                HttpClient httpClient = new HttpClient();
                 httpClient.BaseAddress = new Uri(CryptoPulse_API_PATH);
+
                 HttpResponseMessage response = httpClient.GetAsync(CryptoPulse_API_PATH).GetAwaiter().GetResult();
 
                 if (response.IsSuccessStatusCode)
@@ -61,6 +64,44 @@ namespace CryptoPulse.Infrastructure.CryptoPulseHandler
                 return new List<Coin>();
             }
         }
+
+        public List<Market> GetMarkets(int coinId)
+        {
+            try
+            {
+                string CryptoPulse_API_PATH = $"{BASE_URL}/coin/markets/?id={coinId}";
+                httpClient.BaseAddress = new Uri(CryptoPulse_API_PATH);
+                HttpResponseMessage response = httpClient.GetAsync(CryptoPulse_API_PATH).GetAwaiter().GetResult();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var marketInfo = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (!string.IsNullOrWhiteSpace(marketInfo))
+                    {
+                        JObject jsonObject = JObject.Parse(marketInfo);
+                        JArray data = (JArray)jsonObject["data"];
+
+                        if (data != null)
+                        {
+                            List<Market> markets = data.ToObject<List<Market>>();
+                            return markets;
+                        }
+                    }
+                }
+
+                // Handle the case where the response is not successful or the coin data is empty.
+                return new List<Market>();
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions here, log them, and possibly return a default value or throw.
+                // For example:
+                // Log.Error("Error in GetMarkets method: " + ex.Message);
+                // throw;
+                return new List<Market>();
+            }
+        }
+
 
 
         /****

@@ -53,6 +53,22 @@ namespace MVCTemplate.Controllers
             return View(coins);
         }
 
+        public IActionResult Markets(int id)
+        {
+            //Set ViewBag variable first
+            ViewBag.dbSucessComp = 0;
+            CryptoPulseHandler webHandler = new CryptoPulseHandler();
+            List<Market> markets = webHandler.GetMarkets(id);
+            string marketsData = JsonConvert.SerializeObject(markets);
+            HttpContext.Session.SetString(SessionKeyName, marketsData);
+            var marketsViewModel = new MarketsViewModel
+            {
+                Coins = webHandler.GetCoins(),
+                Markets = markets
+            };
+            return View("Markets", marketsViewModel);
+        }
+
         /****
          * The Chart action calls the GetChart method that returns 1 year's equities for the passed symbol.
          * A ViewModel CompaniesEquities containing the list of companies, prices, volumes, avg price and volume.
@@ -136,6 +152,55 @@ namespace MVCTemplate.Controllers
             }
 
             return View("Coins", coins);
+        }
+
+        /****
+ * Saves the Markets in database.
+****/
+        public IActionResult PopulateMarkets()
+        {
+            string marketsData = HttpContext.Session.GetString(SessionKeyName);
+            List<Market> markets = null;
+            if (marketsData != "")
+            {
+                markets = JsonConvert.DeserializeObject<List<Market>>(marketsData);
+            }
+
+            using (var transaction = dbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Enable IDENTITY_INSERT for the "Coins" table
+                    dbContext.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Coins ON");
+
+                    foreach (Market market in markets)
+                    {
+                        // Database will give PK constraint violation error when trying to insert a record with an existing PK.
+                        // So add the coin only if it doesn't exist, check existence using the "Symbol" (PK).
+                        if (dbContext.Markets.Where(c => c.MarketID.Equals(market.MarketID)).Count() == 0)
+                        {
+                            dbContext.Markets.Add(market);
+                        }
+                    }
+
+                    dbContext.SaveChanges();
+                    transaction.Commit();
+                    ViewBag.dbSuccessComp = 1;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ViewBag.dbSuccessComp = 0;
+                    // Handle the exception as needed (e.g., log the error).
+                }
+                finally
+                {
+                    // Disable IDENTITY_INSERT
+                    dbContext.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Coins OFF");
+                }
+            }
+
+            return View("Markets", markets);
         }
 
 

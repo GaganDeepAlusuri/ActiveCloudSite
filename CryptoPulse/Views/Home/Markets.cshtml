@@ -1,0 +1,71 @@
+﻿@model CryptoPulse.Models.MarketsViewModel
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 mt-3">
+
+            <!-- Dropdown for data selection -->
+            <form method="get" action="@Url.Action("Markets", "Home")">
+                <select class="form-select" aria-label="Default select example" name="selectedValue">
+                    <option selected disabled>Select a Crypto Currency to view its Markets</option>
+                    @if (Model.Coins.Any())
+                    {
+                        @foreach (var coin in Model.Coins)
+                        {
+                            <option value="@coin.ID">@coin.Name</option>
+                        }
+                    }
+                </select>
+                <input type="submit" value="Submit" style="display: none;" />
+            </form>
+
+
+            <!-- Table to display fetched data -->
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Base</th>
+                        <th>Quote</th>
+                        <th>Price</th>
+                        <th>Price USD</th>
+                        <th>Volume</th>
+                        <th>Volume USD</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Markets)
+                    {
+                        <tr>
+                            <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Base)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Quote)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Price)</td>
+                            <td>@Html.DisplayFor(modelItem => item.PriceUSD)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Volume)</td>
+                            <td>@Html.DisplayFor(modelItem => item.VolumeUSD)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Time)</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td>
+                            <a id="dbopt" asp-controller="Home" asp-action="PopulateCoins">
+                                <img src="~/images/button_save-data.png" />
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Include Bootstrap JavaScript from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Your custom script -->
+<script>
+    alertDbSave(@ViewBag.dbSuccessComp);
+</script>
