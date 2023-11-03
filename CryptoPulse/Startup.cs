@@ -5,8 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CryptoPulse.DataAccess;
-using CryptoPulse.Models;
-using CryptoPulse.ModelDto;
 using Microsoft.EntityFrameworkCore;
 
 namespace MVCTemplate

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using CryptoPulse.Infrastructure.CryptoPulseHandler;
 using CryptoPulse.Models;
-using CryptoPulse.Models.ViewModel;
 using CryptoPulse.DataAccess;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
@@ -80,27 +79,6 @@ namespace MVCTemplate.Controllers
             return View("Exchanges", exchanges);
         }
 
-        /****
-         * The Chart action calls the GetChart method that returns 1 year's equities for the passed symbol.
-         * A ViewModel CompaniesEquities containing the list of companies, prices, volumes, avg price and volume.
-         * This ViewModel is passed to the Chart view.
-        ****/
-        public IActionResult Chart(string symbol)
-        {
-            //Set ViewBag variable first
-            ViewBag.dbSuccessChart = 0;
-            List<Equity> equities = new List<Equity>();
-            if (symbol != null)
-            {
-                CryptoPulseHandler webHandler = new CryptoPulseHandler();
-                equities = webHandler.GetChart(symbol);
-                equities = equities.OrderBy(c => c.date).ToList(); //Make sure the data is in ascending order of date.
-            }
-
-            CompaniesEquities companiesEquities = getCompaniesEquitiesModel(equities);
-
-            return View(companiesEquities);
-        }
 
         /****
          * The Refresh action calls the ClearTables method to delete records from a or all tables.
@@ -110,9 +88,9 @@ namespace MVCTemplate.Controllers
         {
             ClearTables(tableToDel);
             Dictionary<string, int> tableCount = new Dictionary<string, int>();
-            tableCount.Add("Companies", dbContext.Companies.Count());
-            tableCount.Add("Charts", dbContext.Equities.Count());
             tableCount.Add("Coins", dbContext.Coins.Count());
+            tableCount.Add("Exchanges", dbContext.Exchanges.Count());
+            tableCount.Add("Markets", dbContext.Markets.Count());
             return View(tableCount);
         }
 
@@ -166,8 +144,8 @@ namespace MVCTemplate.Controllers
         }
 
         /****
- * Saves the Markets in database.
-****/
+         * Saves the Markets in database.
+        ****/
         public IActionResult PopulateMarkets()
         {
             string marketsData = HttpContext.Session.GetString(SessionKeyName);
@@ -214,31 +192,6 @@ namespace MVCTemplate.Controllers
             return View("Markets", markets);
         }
 
-
-        /****
-         * Saves the equities in database.
-        ****/
-        public IActionResult SaveCharts(string symbol)
-        {
-            CryptoPulseHandler webHandler = new CryptoPulseHandler();
-            List<Equity> equities = webHandler.GetChart(symbol);
-            //List<Equity> equities = JsonConvert.DeserializeObject<List<Equity>>(TempData["Equities"].ToString());
-            foreach (Equity equity in equities)
-            {
-                if (dbContext.Equities.Where(c => c.date.Equals(equity.date)).Count() == 0)
-                {
-                    dbContext.Equities.Add(equity);
-                }
-            }
-
-            dbContext.SaveChanges();
-            ViewBag.dbSuccessChart = 1;
-
-            CompaniesEquities companiesEquities = getCompaniesEquitiesModel(equities);
-
-            return View("Chart", companiesEquities);
-        }
-
         /****
          * Deletes the records from tables.
         ****/
@@ -246,49 +199,23 @@ namespace MVCTemplate.Controllers
         {
             if ("all".Equals(tableToDel))
             {
-                //First remove equities and then the companies
-                dbContext.Equities.RemoveRange(dbContext.Equities);
-                dbContext.Companies.RemoveRange(dbContext.Companies);
                 dbContext.Coins.RemoveRange(dbContext.Coins);
-            }
-            else if ("Companies".Equals(tableToDel))
-            {
-                //Remove only those that don't have Equity stored in the Equitites table
-                dbContext.Companies.RemoveRange(dbContext.Companies
-                                                         .Where(c => c.Equities.Count == 0)
-                                                                      );
-            }
-            else if ("Charts".Equals(tableToDel))
-            {
-                dbContext.Equities.RemoveRange(dbContext.Equities);
+                dbContext.Exchanges.RemoveRange(dbContext.Exchanges);
+                dbContext.Markets.RemoveRange(dbContext.Markets);
             }
             else if ("Coins".Equals(tableToDel))
             {
                 dbContext.Coins.RemoveRange(dbContext.Coins);
             }
+            else if ("Exchanges".Equals(tableToDel))
+            {
+                dbContext.Exchanges.RemoveRange(dbContext.Exchanges);
+            }
+            else if ("Markets".Equals(tableToDel))
+            {
+                dbContext.Markets.RemoveRange(dbContext.Markets);
+            }
             dbContext.SaveChanges();
         }
-
-        /****
-         * Returns the ViewModel CompaniesEquities based on the data provided.
-         ****/
-        public CompaniesEquities getCompaniesEquitiesModel(List<Equity> equities)
-        {
-            List<Company> companies = dbContext.Companies.ToList();
-
-            if (equities.Count == 0)
-            {
-                return new CompaniesEquities(companies, null, "", "", "", 0, 0);
-            }
-
-            Equity current = equities.Last();
-            string dates = string.Join(",", equities.Select(e => e.date));
-            string prices = string.Join(",", equities.Select(e => e.high));
-            string volumes = string.Join(",", equities.Select(e => e.volume / 1000000)); //Divide vol by million
-            float avgprice = equities.Average(e => e.high);
-            double avgvol = equities.Average(e => e.volume) / 1000000; //Divide volume by million
-            return new CompaniesEquities(companies, equities.Last(), dates, prices, volumes, avgprice, avgvol);
-        }
-
     }
 }
