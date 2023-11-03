@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using Newtonsoft.Json;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -62,6 +62,122 @@ namespace MVCTemplate.Controllers
             HttpContext.Session.SetString(SessionKeyName, coinsData);
             return View("WatchList", watchListcoins);
         }
+
+        public IActionResult AddToWatchList(string coinJson)
+        {
+            //Set ViewBag variable first
+            ViewBag.dbSucessComp = 0;
+            // Deserialize the JSON data back to a list of Coin objects
+            CoinWatchList coin = JsonConvert.DeserializeObject<CoinWatchList>(coinJson);
+            using (var transaction = dbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Enable IDENTITY_INSERT for the "Coins" table
+                    dbContext.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Coins ON");
+
+                    // Check if a coin with the same symbol already exists in the table
+                    var existingCoin = dbContext.Coins.FirstOrDefault(c => c.Symbol.Equals(coin.Symbol));
+
+                    if (existingCoin == null)
+                    {
+                        // Coin does not exist, so add it
+                        // Create a new Coin object and set its properties
+                        Coin newCoin = new Coin
+                        {
+                            Symbol = coin.Symbol,
+                            Name = coin.Name,
+                            Rank = coin.Rank,
+                            PriceUSD = coin.PriceUSD, // Replace with the actual price
+                            ID = coin.ID, // Replace with the actual ID value
+                            MarketCapUSD = coin.MarketCapUSD, // Replace with the actual market cap
+                            Volume24h = coin.Volume24h, // Replace with the actual 24-hour volume
+                            SupplyCurrent = coin.SupplyCurrent, // Replace with the actual current supply
+                            SupplyTotal = coin.SupplyTotal, // Replace with the actual total supply
+                            SupplyMax = coin.SupplyMax, // Replace with the actual maximum supply
+                            PercentChange1h = coin.PercentChange1h, // Replace with the actual 1-hour percentage change
+                            PercentChange24h = coin.PercentChange24h, // Replace with the actual 24-hour percentage change
+                            PercentChange7d = coin.PercentChange7d // Replace with the actual 7-day percentage change
+                        };
+
+                        // Add the newCoin object to the dbContext
+                        dbContext.Coins.Add(newCoin);
+
+                        // Save changes to the database
+                        dbContext.SaveChanges();
+
+                        dbContext.SaveChanges();
+                        transaction.Commit();
+                        ViewBag.dbSuccessComp = 1;
+                    }
+                    else
+                    {
+                        // Coin with the same symbol already exists, you can handle it as needed
+                        // For example, update the existing record or skip the duplicate
+                        transaction.Rollback();
+                        ViewBag.dbSuccessComp = 0;
+                        // Handle the duplicate coin here
+                    }
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ViewBag.dbSuccessComp = 0;
+                    // Handle the exception as needed (e.g., log the error).
+                }
+                finally
+                {
+                    // Disable IDENTITY_INSERT
+                    dbContext.Database.ExecuteSqlRaw("SET IDENTITY_INSERT Coins OFF");
+                }
+            }
+            CryptoPulseHandler webHandler = new CryptoPulseHandler();
+            List<Coin> coins = webHandler.GetCoins();
+            return View("Coins", coins);
+        }
+
+        public IActionResult DeleteFromWatchList(int coinID)
+        {
+            // Set ViewBag variable first
+            ViewBag.dbSuccessComp = 0;
+            using (var transaction = dbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Find the coin with the given ID in the table
+                    var coinToDelete = dbContext.Coins.FirstOrDefault(c => c.ID == coinID);
+
+                    if (coinToDelete != null)
+                    {
+                        // Coin exists, so delete it
+                        dbContext.Coins.Remove(coinToDelete);
+                        dbContext.SaveChanges();
+
+                        transaction.Commit();
+                        ViewBag.dbSuccessComp = 1;
+                    }
+                    else
+                    {
+                        // Coin with the given ID does not exist, handle it as needed
+                        transaction.Rollback();
+                        ViewBag.dbSuccessComp = 0;
+                        // Handle the case when the coin does not exist in the table
+                    }
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    ViewBag.dbSuccessComp = 0;
+                    // Handle the exception as needed (e.g., log the error).
+                }
+            }
+
+            List<Coin> watchListcoins = GetWatchList();
+            string coinsData = JsonConvert.SerializeObject(watchListcoins);
+            HttpContext.Session.SetString(SessionKeyName, coinsData);
+            return View("WatchList", watchListcoins);
+        }
+
 
         public IActionResult Markets(int coinID)
         {

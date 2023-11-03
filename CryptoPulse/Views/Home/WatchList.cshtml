@@ -16,6 +16,7 @@
                 <th>Percent Change 1h</th>
                 <th>Percent Change 7d</th>
                 <th>Market Cap USD</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +31,12 @@
                     <td>@Html.DisplayFor(modelItem => item.PercentChange1h)</td>
                     <td>@Html.DisplayFor(modelItem => item.PercentChange7d)</td>
                     <td>@Html.DisplayFor(modelItem => item.MarketCapUSD)</td>
+                    <td>
+                        <form method="post" asp-action="DeleteFromWatchList">
+                            <input type="hidden" name="coinID" value='@item.ID' />
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

@@ -50,4 +50,38 @@ namespace CryptoPulse.Models
         // Existing Relationship (One-to-Many with MarketDto)
         public List<Market> Markets { get; set; }
     }
+
+    public class CoinWatchList
+    {
+        [Key]
+        public int ID { get; set; }
+
+        public string Symbol { get; set; }
+
+        public string Name { get; set; }
+
+        public int Rank { get; set; }
+
+        public decimal? PriceUSD { get; set; }
+
+        public decimal? MarketCapUSD { get; set; }
+
+        public decimal? Volume24h { get; set; }
+
+        public decimal? SupplyCurrent { get; set; }
+
+        public decimal? SupplyTotal { get; set; }
+
+        public decimal? SupplyMax { get; set; }
+
+        public decimal? PercentChange1h { get; set; }
+
+        public decimal? PercentChange24h { get; set; }
+
+        public decimal? PercentChange7d { get; set; }
+
+        // Existing Relationship (One-to-Many with MarketDto)
+        public List<Market> Markets { get; set; }
+    }
+
 }
