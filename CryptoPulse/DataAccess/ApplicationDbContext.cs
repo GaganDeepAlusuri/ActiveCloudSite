@@ -8,8 +8,6 @@ namespace CryptoPulse.DataAccess
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        public DbSet<Company> Companies { get; set; }
-        public DbSet<Equity> Equities { get; set; }
         public DbSet<Coin> Coins { get; set; }
         public DbSet<Market> Markets { get; set; }
         public DbSet<Exchange> Exchanges { get; set; }
