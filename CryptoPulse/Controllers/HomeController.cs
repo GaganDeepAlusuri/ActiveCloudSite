@@ -53,12 +53,12 @@ namespace MVCTemplate.Controllers
             return View(coins);
         }
 
-        public IActionResult Markets(int id)
+        public IActionResult Markets(int coinID)
         {
             //Set ViewBag variable first
             ViewBag.dbSucessComp = 0;
             CryptoPulseHandler webHandler = new CryptoPulseHandler();
-            List<Market> markets = webHandler.GetMarkets(id);
+            List<Market> markets = webHandler.GetMarkets(coinID);
             string marketsData = JsonConvert.SerializeObject(markets);
             HttpContext.Session.SetString(SessionKeyName, marketsData);
             var marketsViewModel = new MarketsViewModel
@@ -67,6 +67,17 @@ namespace MVCTemplate.Controllers
                 Markets = markets
             };
             return View("Markets", marketsViewModel);
+        }
+
+        public IActionResult Exchanges()
+        {
+            //Set ViewBag variable first
+            ViewBag.dbSucessComp = 0;
+            CryptoPulseHandler webHandler = new CryptoPulseHandler();
+            List<Exchange> exchanges = webHandler.GetExchanges();
+            string exchangesData = JsonConvert.SerializeObject(exchanges);
+            HttpContext.Session.SetString(SessionKeyName, exchangesData);
+            return View("Exchanges", exchanges);
         }
 
         /****

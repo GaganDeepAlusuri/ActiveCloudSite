@@ -1,0 +1,43 @@
+﻿@model IEnumerable<CryptoPulse.Models.Exchange>
+
+
+<div class="container">
+    <h2>Exchanges</h2>
+    <hr />
+
+    <table class="table table-dark table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Name ID</th>
+                <th>Volume (USD)</th>
+                <th>Active Pairs</th>
+                <th>URL</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.ExchangeID)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                    <td>@Html.DisplayFor(modelItem => item.NameId)</td>
+                    <td>@Html.DisplayFor(modelItem => item.VolumeUSD)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ActivePairs)</td>
+                    <td><a href="@item.Url" target="_blank">@item.Url</a></td>
+                    <td>@Html.DisplayFor(modelItem => item.Country)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Include Bootstrap JavaScript from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Your custom script -->
+<script>
+    alertDbSave(@ViewBag.dbSuccessComp);
+</script>

@@ -5,8 +5,8 @@
         <div class="col-12 mt-3">
 
             <!-- Dropdown for data selection -->
-            <form method="get" action="@Url.Action("Markets", "Home")">
-                <select class="form-select" aria-label="Default select example" name="selectedValue">
+            <form asp-action="Markets" method="get">
+                <select class="form-select" aria-label="Default select example" name="selectedValue" id="ddltype" name="coinID" asp-items="ViewBag.Types" onchange="document.getElementById('btnSubmit').click();">
                     <option selected disabled>Select a Crypto Currency to view its Markets</option>
                     @if (Model.Coins.Any())
                     {
@@ -16,7 +16,7 @@
                         }
                     }
                 </select>
-                <input type="submit" value="Submit" style="display: none;" />
+                <input id="btnSubmit" hidden type="submit" value="submit" />
             </form>
 
 
@@ -35,26 +35,28 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model.Markets)
+                    @if (Model.Markets.Any())
+                    {
+                        @foreach (var item in Model.Markets)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Base)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Quote)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Price)</td>
+                                <td>@Html.DisplayFor(modelItem => item.PriceUSD)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Volume)</td>
+                                <td>@Html.DisplayFor(modelItem => item.VolumeUSD)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Time)</td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                            <td>@Html.DisplayFor(modelItem => item.Base)</td>
-                            <td>@Html.DisplayFor(modelItem => item.Quote)</td>
-                            <td>@Html.DisplayFor(modelItem => item.Price)</td>
-                            <td>@Html.DisplayFor(modelItem => item.PriceUSD)</td>
-                            <td>@Html.DisplayFor(modelItem => item.Volume)</td>
-                            <td>@Html.DisplayFor(modelItem => item.VolumeUSD)</td>
-                            <td>@Html.DisplayFor(modelItem => item.Time)</td>
+                            <td colspan="8">No data available</td>
                         </tr>
                     }
-                    <tr>
-                        <td>
-                            <a id="dbopt" asp-controller="Home" asp-action="PopulateCoins">
-                                <img src="~/images/button_save-data.png" />
-                            </a>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
         </div>

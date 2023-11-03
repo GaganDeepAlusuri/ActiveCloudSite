@@ -78,12 +78,10 @@ namespace CryptoPulse.Infrastructure.CryptoPulseHandler
                     var marketInfo = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     if (!string.IsNullOrWhiteSpace(marketInfo))
                     {
-                        JObject jsonObject = JObject.Parse(marketInfo);
-                        JArray data = (JArray)jsonObject["data"];
+                        List<Market> markets = JsonConvert.DeserializeObject<List<Market>>(marketInfo);
 
-                        if (data != null)
+                        if (markets != null)
                         {
-                            List<Market> markets = data.ToObject<List<Market>>();
                             return markets;
                         }
                     }
@@ -102,7 +100,47 @@ namespace CryptoPulse.Infrastructure.CryptoPulseHandler
             }
         }
 
+        public List<Exchange> GetExchanges()
+        {
+            try
+            {
+                string CryptoPulse_API_PATH = BASE_URL + "exchanges/";
 
+                // Create a new HttpClient instance or configure it during initialization
+                HttpClient httpClient = new HttpClient();
+                httpClient.BaseAddress = new Uri(CryptoPulse_API_PATH);
+
+                HttpResponseMessage response = httpClient.GetAsync(CryptoPulse_API_PATH).GetAwaiter().GetResult();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var exchangeInfo = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (!string.IsNullOrWhiteSpace(exchangeInfo))
+                    {
+                        JObject jsonObject = JObject.Parse(exchangeInfo);
+
+                        List<Exchange> exchanges = jsonObject.Values().Select(subObject =>
+                        {
+                            return JsonConvert.DeserializeObject<Exchange>(subObject.ToString());
+                        }).ToList();
+
+                        // Now, the 'exchanges' list contains the converted Exchange objects
+                        return exchanges;
+                    }
+                }
+
+                // Handle the case where the response is not successful or the coin data is empty.
+                return new List<Exchange>();
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions here, log them, and possibly return a default value or throw.
+                // For example:
+                // Log.Error("Error in GetCoins method: " + ex.Message);
+                // throw;
+                return new List<Exchange>();
+            }
+        }
 
         /****
          * Calls the  Coin Lore API to get 1 year's chart for the supplied symbol. 
