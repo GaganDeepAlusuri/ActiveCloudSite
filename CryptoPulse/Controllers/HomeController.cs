@@ -52,6 +52,17 @@ namespace MVCTemplate.Controllers
             return View(coins);
         }
 
+        public IActionResult WatchList()
+        {
+            //Set ViewBag variable first
+            ViewBag.dbSucessComp = 0;
+            CryptoPulseHandler webHandler = new CryptoPulseHandler();
+            List<Coin> watchListcoins = GetWatchList();
+            string coinsData = JsonConvert.SerializeObject(watchListcoins);
+            HttpContext.Session.SetString(SessionKeyName, coinsData);
+            return View("WatchList", watchListcoins);
+        }
+
         public IActionResult Markets(int coinID)
         {
             //Set ViewBag variable first
@@ -142,6 +153,26 @@ namespace MVCTemplate.Controllers
 
             return View("Coins", coins);
         }
+
+        public List<Coin> GetWatchList()
+        {
+            List<Coin> coins = new List<Coin>(); // Initialize to an empty list
+
+            try
+            {
+                // Query the database to select all coins
+                coins = dbContext.Coins.ToList();
+
+                ViewBag.dbSuccessComp = 1;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.dbSuccessComp = 0;
+                // Handle the exception as needed (e.g., log the error).
+            }
+            return coins;
+        }
+
 
         /****
          * Saves the Markets in database.
