@@ -18,20 +18,13 @@ namespace MVCTemplate.Controllers
     public class HomeController : Controller
     {
         public ApplicationDbContext dbContext;
-        private readonly AppSettings _appSettings;
         public const string SessionKeyName = "CoinsData";
         //List<Company> companies = new List<Company>();
-        public HomeController(ApplicationDbContext context, IOptions<AppSettings> appSettings)
+        public HomeController(ApplicationDbContext context)
         {
             dbContext = context;
-            _appSettings = appSettings.Value;
         }
 
-        public IActionResult HelloIndex()
-        {
-            ViewBag.Hello = _appSettings.Hello;
-            return View();
-        }
         public IActionResult Index()
         {
             return View();
